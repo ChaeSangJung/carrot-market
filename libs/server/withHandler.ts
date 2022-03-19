@@ -5,6 +5,7 @@ export default function withHandler(
   fn: (req: NextApiRequest, res: NextApiResponse) => void
 ) {
   return async function (req: NextApiRequest, res: NextApiResponse) {
+    // res.json({hello:true})
     if (req.method !== method) {
       return res.status(405).end();
     }
