@@ -9,10 +9,26 @@ interface useMutationState {
 type useMutationResult = [(data:any)=> void, useMutationState];
 
 export default function useMutation(url:string) : useMutationResult {
-  const [loading, setLoading] = useState<boolean>(false);
-  const [data, setData] = useState<undefined | any>(undefined);
-  const [error, setError] = useState<undefined | any>(undefined);
+  const [state, setState] = useState<useMutationState>({
+    loading:false,
+    data:undefined,
+    error:undefined,
+  });
   
-  const mutation = (data:any) => {};
-  return [mutation, {loading, data, error}];
+  const mutation = (data:any) => {
+    setState((prev)=>({...prev, loading:true}));
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type":"application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response)=>response.json().catch(()=>{}))
+      .then((data)=>setState((prev)=>({...prev, data})))
+      .catch((error)=>setState((prev)=>({...prev,error})))
+      .finally(()=>setState((prev)=>({...prev, loading:false})));
+    // .then((json)=>setData(json))
+  }
+  return [mutation, {...state}];
 }
