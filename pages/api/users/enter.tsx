@@ -1,14 +1,15 @@
 import client from "@libs/server/client";
-import withHandler from "@libs/server/withHandler";
+import withHandler, {ResponseType} from "@libs/server/withHandler";
 import { NextApiRequest, NextApiResponse } from "next";
 
-async function handler (req:NextApiRequest, res:NextApiResponse){
+async function handler (req:NextApiRequest, res:NextApiResponse<ResponseType>){
   const { phone, email } = req.body;
-  const user = phone ? { phone: +phone } : { email };
+  const user = phone ? { phone: +phone } : email ? {email} : null;
+  if(!user) return res.status(400).json({ok: false});
   const payload = Math.floor(100000 + Math.random() * 900000) + "";
   const token = await client.token.create({
     data: {
-      payload,
+      payload:payload,
       user: {
         connectOrCreate: {
           where: {
@@ -22,44 +23,9 @@ async function handler (req:NextApiRequest, res:NextApiResponse){
       },
     },
   });
-  console.log(token);
-  /* if (email) { // email을 가진 유저 찾기
-    user = await client.user.findUnique({
-      where: {
-        email:email,
-      },
-    });
-    if (user) console.log("found it.");
-    if (!user) {
-      console.log("Did not find. Will create.");
-      user = await client.user.create({
-        data: {
-          name: "Anonymous",
-          email,
-        },
-      });
-    }
-    console.log(user);
-  }
-  if (phone) {
-    user = await client.user.findUnique({
-      where: {
-        phone: +phone,
-      },
-    });
-    if (user) console.log("found it.");
-    if (!user) {
-      console.log("Did not find. Will create.");
-      user = await client.user.create({
-        data: {
-          name: "Anonymous",
-          phone: +phone,
-        },
-      });
-    }
-    console.log(user);
-  } */
-  return res.status(200).end();
+  return res.json({
+    ok: true,
+  });
 }
 
 export default withHandler("POST", handler);
